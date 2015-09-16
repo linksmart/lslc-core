@@ -18,6 +18,7 @@ type MQTTPublisher struct {
 	clientId string
 	client   *MQTT.MqttClient
 	dataCh   chan AgentResponse
+	resourceToTopic *map[string]string
 }
 
 func newMQTTPublisher(conf *Config) *MQTTPublisher {
@@ -28,11 +29,18 @@ func newMQTTPublisher(conf *Config) *MQTTPublisher {
 	}
 
 	requiresMqtt := false
+	mapResourcesToTopic := make(map[string]string)
 	for _, d := range conf.Devices {
 		for _, r := range d.Resources {
 			for _, p := range r.Protocols {
 				if p.Type == ProtocolTypeMQTT {
 					requiresMqtt = true
+					if len(p.Type)>0 {
+						for _, t := range p.Topics {
+							mapResourcesToTopic[d.ResourceId(r.Name)] = t	
+							logger.Println(r.Name," mapped to MQTT-topic : ",mapResourcesToTopic[d.ResourceId(r.Name)])
+						}
+					}
 					break
 				}
 				if requiresMqtt {
@@ -57,6 +65,7 @@ func newMQTTPublisher(conf *Config) *MQTTPublisher {
 		config:   &config,
 		clientId: fmt.Sprintf("%v-%v", conf.Id, time.Now().Unix()),
 		dataCh:   make(chan AgentResponse),
+		resourceToTopic: &mapResourcesToTopic,
 	}
 
 	return publisher
@@ -95,7 +104,16 @@ func (p *MQTTPublisher) start() {
 			logger.Println("MQTTPublisher.start() data ERROR from agent manager:", string(resp.Payload))
 			continue
 		}
-		topic := fmt.Sprintf("%s/%s", prefix, resp.ResourceId)
+	
+		topicMap := *p.resourceToTopic
+		topic := topicMap[resp.ResourceId]
+		if topic == ""{
+			topic = fmt.Sprintf("%s/%s", prefix, resp.ResourceId)
+		 	logger.Println("publishing topic: ",topic)				
+		}else{
+			logger.Println("publishing configured topic: ",topic)
+		}
+		
 		p.client.Publish(MQTT.QoS(qos), topic, resp.Payload)
 		// We dont' wait for confirmation from broker (avoid blocking here!)
 		//<-r

@@ -306,6 +306,7 @@ type SupportedProtocol struct {
 	Type         ProtocolType
 	Methods      []string
 	ContentTypes []string `json:"content-types"`
+	Topics       []string
 }
 
 //
