@@ -4,16 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
-
-	auth "linksmart.eu/auth/obtainer"
 )
 
 type RemoteCatalogClient struct {
 	serverEndpoint *url.URL
-	ticketClient   *auth.Client
 }
 
 func deviceFromResponse(res *http.Response, apiLocation string) (*Device, error) {
@@ -84,7 +80,7 @@ func resourcesFromResponse(res *http.Response, apiLocation string) ([]Resource, 
 	return ress, len(coll.Resources), nil
 }
 
-func NewRemoteCatalogClient(serverEndpoint string, ticketClient *auth.Client) *RemoteCatalogClient {
+func NewRemoteCatalogClient(serverEndpoint string) *RemoteCatalogClient {
 	// Check if serverEndpoint is a correct URL
 	endpointUrl, err := url.Parse(serverEndpoint)
 	if err != nil {
@@ -93,63 +89,11 @@ func NewRemoteCatalogClient(serverEndpoint string, ticketClient *auth.Client) *R
 
 	return &RemoteCatalogClient{
 		serverEndpoint: endpointUrl,
-		ticketClient:   ticketClient,
 	}
-}
-
-// Manually submit an HTTP request and get the response
-func (self *RemoteCatalogClient) httpClient(method string, url string,
-	body io.Reader, headers map[string]string) (*http.Response, error) {
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		return nil, err
-	}
-	// Set headers
-	for key, val := range headers {
-		req.Header.Set(key, val)
-	}
-
-	// If ticketClient is instantiated, service requires auth
-	if self.ticketClient != nil {
-		// Set auth header and send the request
-		req.Header.Set("X-Auth-Token", self.ticketClient.Ticket())
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			return nil, err
-		}
-
-		if res != nil {
-			if res.StatusCode == http.StatusUnauthorized {
-				// Get a new ticket and retry again
-				logger.Println("httpClient() Invalid authentication ticket.")
-				ticket, err := self.ticketClient.Renew()
-				if err != nil {
-					return nil, err
-				}
-				logger.Println("httpClient() Renewed ticket.")
-
-				// Reset the header and try again
-				req.Header.Set("X-Auth-Token", ticket)
-				res, err := http.DefaultClient.Do(req)
-				if err != nil {
-					return nil, err
-				}
-				return res, nil
-			}
-		}
-		return res, nil
-	}
-
-	// No auth
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
 }
 
 func (self *RemoteCatalogClient) Get(id string) (*Device, error) {
-	res, err := self.httpClient("GET", fmt.Sprintf("%v/%v", self.serverEndpoint, id), nil, nil)
+	res, err := http.Get(fmt.Sprintf("%v/%v", self.serverEndpoint, id))
 	if err != nil {
 		return nil, err
 	}
@@ -164,10 +108,7 @@ func (self *RemoteCatalogClient) Get(id string) (*Device, error) {
 
 func (self *RemoteCatalogClient) Add(d *Device) error {
 	b, _ := json.Marshal(d)
-	_, err := self.httpClient("POST", self.serverEndpoint.String()+"/",
-		bytes.NewReader(b),
-		map[string]string{"Content-Type": "application/ld+json"},
-	)
+	_, err := http.Post(self.serverEndpoint.String()+"/", "application/ld+json", bytes.NewReader(b))
 	if err != nil {
 		return err
 	}
@@ -176,7 +117,12 @@ func (self *RemoteCatalogClient) Add(d *Device) error {
 
 func (self *RemoteCatalogClient) Update(id string, d *Device) error {
 	b, _ := json.Marshal(d)
-	res, err := self.httpClient("PUT", fmt.Sprintf("%v/%v", self.serverEndpoint, id), bytes.NewReader(b), nil)
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%v/%v", self.serverEndpoint, id), bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -190,7 +136,12 @@ func (self *RemoteCatalogClient) Update(id string, d *Device) error {
 }
 
 func (self *RemoteCatalogClient) Delete(id string) error {
-	res, err := self.httpClient("DELETE", fmt.Sprintf("%v/%v", self.serverEndpoint, id), bytes.NewReader([]byte{}), nil)
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%v/%v", self.serverEndpoint, id), bytes.NewReader([]byte{}))
+	if err != nil {
+		return err
+	}
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -205,9 +156,9 @@ func (self *RemoteCatalogClient) Delete(id string) error {
 }
 
 func (self *RemoteCatalogClient) GetDevices(page int, perPage int) ([]Device, int, error) {
-	res, err := self.httpClient("GET",
+	res, err := http.Get(
 		fmt.Sprintf("%v?%v=%v&%v=%v",
-			self.serverEndpoint, GetParamPage, page, GetParamPerPage, perPage), nil, nil)
+			self.serverEndpoint, GetParamPage, page, GetParamPerPage, perPage))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -216,7 +167,7 @@ func (self *RemoteCatalogClient) GetDevices(page int, perPage int) ([]Device, in
 }
 
 func (self *RemoteCatalogClient) FindDevice(path, op, value string) (*Device, error) {
-	res, err := self.httpClient("GET", fmt.Sprintf("%v/%v/%v/%v/%v", self.serverEndpoint, FTypeDevice, path, op, value), nil, nil)
+	res, err := http.Get(fmt.Sprintf("%v/%v/%v/%v/%v", self.serverEndpoint, FTypeDevice, path, op, value))
 	if err != nil {
 		return nil, err
 	}
@@ -230,9 +181,9 @@ func (self *RemoteCatalogClient) FindDevice(path, op, value string) (*Device, er
 }
 
 func (self *RemoteCatalogClient) FindDevices(path, op, value string, page, perPage int) ([]Device, int, error) {
-	res, err := self.httpClient("GET",
+	res, err := http.Get(
 		fmt.Sprintf("%v/%v/%v/%v/%v?%v=%v&%v=%v",
-			self.serverEndpoint, FTypeDevices, path, op, value, GetParamPage, page, GetParamPerPage, perPage), nil, nil)
+			self.serverEndpoint, FTypeDevices, path, op, value, GetParamPage, page, GetParamPerPage, perPage))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -241,7 +192,7 @@ func (self *RemoteCatalogClient) FindDevices(path, op, value string, page, perPa
 }
 
 func (self *RemoteCatalogClient) FindResource(path, op, value string) (*Resource, error) {
-	res, err := self.httpClient("GET", fmt.Sprintf("%v/%v/%v/%v/%v", self.serverEndpoint, FTypeResource, path, op, value), nil, nil)
+	res, err := http.Get(fmt.Sprintf("%v/%v/%v/%v/%v", self.serverEndpoint, FTypeResource, path, op, value))
 	if err != nil {
 		return nil, err
 	}
@@ -255,9 +206,9 @@ func (self *RemoteCatalogClient) FindResource(path, op, value string) (*Resource
 }
 
 func (self *RemoteCatalogClient) FindResources(path, op, value string, page, perPage int) ([]Resource, int, error) {
-	res, err := self.httpClient("GET",
+	res, err := http.Get(
 		fmt.Sprintf("%v/%v/%v/%v/%v?%v=%v&%v=%v",
-			self.serverEndpoint, FTypeResources, path, op, value, GetParamPage, page, GetParamPerPage, perPage), nil, nil)
+			self.serverEndpoint, FTypeResources, path, op, value, GetParamPage, page, GetParamPerPage, perPage))
 	if err != nil {
 		return nil, 0, err
 	}

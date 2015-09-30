@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 
-	"linksmart.eu/auth/validator"
 	utils "linksmart.eu/lc/core/catalog"
 )
 
@@ -20,8 +19,6 @@ type Config struct {
 	StaticDir    string        `json:"staticDir"`
 	Storage      StorageConfig `json:"storage"`
 	GC           GCConfig      `js:"gc"`
-	// Auth config
-	Auth validator.Conf `json:"auth"`
 }
 
 type StorageConfig struct {
@@ -64,14 +61,6 @@ func (c *Config) Validate() error {
 			err = fmt.Errorf("gc tunnelingService must be a valid URL")
 		}
 	}
-	if c.Auth.Enabled {
-		// Validate ticket validator config
-		err = c.Auth.Validate()
-		if err != nil {
-			return err
-		}
-	}
-
 	return err
 }
 

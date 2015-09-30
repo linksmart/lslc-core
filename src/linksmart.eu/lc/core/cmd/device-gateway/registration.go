@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	cas "linksmart.eu/auth/cas/obtainer"
-	auth "linksmart.eu/auth/obtainer"
 	catalog "linksmart.eu/lc/core/catalog/resource"
 )
 
@@ -38,10 +36,11 @@ func configureDevices(config *Config) []catalog.Device {
 				p.ContentTypes = proto.ContentTypes
 				p.Endpoint = map[string]interface{}{}
 				if proto.Type == ProtocolTypeREST {
-					p.Endpoint["url"] = fmt.Sprintf("http://%s:%d%s",
-						config.PublicAddr,
-						config.Http.BindPort,
-						restConfig.Location+"/"+device.Name+"/"+resource.Name)
+					p.Endpoint["url"] = fmt.Sprintf("%s%s/%s/%s",
+						config.PublicEndpoint,
+						restConfig.Location,
+						device.Name,
+						resource.Name)
 				} else if proto.Type == ProtocolTypeMQTT {
 					mqtt, ok := config.Protocols[ProtocolTypeMQTT].(MqttProtocol)
 					if ok {
@@ -78,15 +77,7 @@ func registerInRemoteCatalog(devices []catalog.Device, config *Config) ([]chan<-
 			for _, d := range devices {
 				sigCh := make(chan bool)
 
-				if cat.Auth == nil {
-					go catalog.RegisterDeviceWithKeepalive(cat.Endpoint, cat.Discover, d, sigCh, &wg, nil)
-				} else {
-					// Setup auth client with a CAS obtainer
-					go catalog.RegisterDeviceWithKeepalive(cat.Endpoint, cat.Discover, d, sigCh, &wg,
-						auth.NewClient(cas.New(cat.Auth.ServerAddr), cat.Auth.Username, cat.Auth.Password, cat.Auth.ServiceID),
-					)
-				}
-
+				go catalog.RegisterDeviceWithKeepalive(cat.Endpoint, cat.Discover, d, sigCh, &wg)
 				regChannels = append(regChannels, sigCh)
 				wg.Add(1)
 			}

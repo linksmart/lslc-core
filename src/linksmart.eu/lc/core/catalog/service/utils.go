@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	auth "linksmart.eu/auth/obtainer"
 	utils "linksmart.eu/lc/core/catalog"
 )
 
@@ -42,9 +41,7 @@ func RegisterService(client CatalogClient, s *Service) error {
 // endpoint: catalog endpoint. If empty - will be discovered using DNS-SD
 // s: service registration
 // sigCh: channel for shutdown signalisation from upstream
-// ticketClient: set to nil for no auth
-func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
-	sigCh <-chan bool, wg *sync.WaitGroup, ticketClient *auth.Client) {
+func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service, sigCh <-chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var err error
 	if discover {
@@ -55,17 +52,8 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 		}
 	}
 
-	// Get a new service auth ticket
-	if ticketClient != nil {
-		_, err := ticketClient.Obtain()
-		if err != nil {
-			logger.Println("RegisterServiceWithKeepalive() Unable to get service ticket from auth client:", err.Error())
-			return
-		}
-	}
-
 	// Configure client
-	client := NewRemoteCatalogClient(endpoint, ticketClient)
+	client := NewRemoteCatalogClient(endpoint)
 
 	// Will not keepalive registration with a negative TTL
 	if s.Ttl <= 0 {
@@ -76,12 +64,6 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 		for _ = range sigCh {
 			logger.Printf("RegisterServiceWithKeepalive() Removing the registration %v/%v...", endpoint, s.Id)
 			client.Delete(s.Id)
-			if ticketClient != nil {
-				err := ticketClient.Delete()
-				if err != nil {
-					logger.Printf("RegisterServiceWithKeepalive() Error while deleting the TGT: %v", err.Error())
-				}
-			}
 			return
 		}
 	}
@@ -106,7 +88,7 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 				}
 			}
 			logger.Println("RegisterServiceWithKeepalive() Will use the new endpoint: ", endpoint)
-			client := NewRemoteCatalogClient(endpoint, ticketClient)
+			client := NewRemoteCatalogClient(endpoint)
 			go keepAlive(client, &s, ksigCh, kerrCh)
 
 		// catch a shutdown signal from the upstream
@@ -117,12 +99,6 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 			case ksigCh <- true:
 				// delete entry in the remote catalog
 				client.Delete(s.Id)
-				if ticketClient != nil {
-					err := ticketClient.Delete()
-					if err != nil {
-						logger.Printf("RegisterServiceWithKeepalive() Error while deleting the TGT: %v", err.Error())
-					}
-				}
 			case <-time.After(1 * time.Second):
 				logger.Printf("RegisterDeviceWithKeepalive(): timeout removing registration %v/%v: catalog unreachable", endpoint, s.Id)
 			}

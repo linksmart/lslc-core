@@ -10,9 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"linksmart.eu/auth/obtainer"
-	"linksmart.eu/auth/validator"
 )
 
 //
@@ -99,23 +96,30 @@ func loadConfig(confPath string) (*Config, error) {
 // Main configuration container
 //
 type Config struct {
-	Id           string                       `json:"id"`
-	Description  string                       `json:"description"`
-	DnssdEnabled bool                         `json:"dnssdEnabled"`
-	PublicAddr   string                       `json:"publicAddr"`
-	StaticDir    string                       `json:"staticDir`
-	Catalog      []Catalog                    `json:"catalog"`
-	Http         HttpConfig                   `json:"http"`
-	Protocols    map[ProtocolType]interface{} `json:"protocols"`
-	Devices      []Device                     `json:"devices"`
-	// Auth config
-	Auth validator.Conf `json:"auth"`
+	Id             string                       `json:"id"`
+	Description    string                       `json:"description"`
+	DnssdEnabled   bool                         `json:"dnssdEnabled"`
+	PublicEndpoint string                       `json:"publicEndpoint"`
+	StaticDir      string                       `json:"staticDir`
+	Catalog        []Catalog                    `json:"catalog"`
+	Http           HttpConfig                   `json:"http"`
+	Protocols      map[ProtocolType]interface{} `json:"protocols"`
+	Devices        []Device                     `json:"devices"`
 }
 
 // Validates the loaded configuration
 func (c *Config) Validate() error {
+	// Check if PublicEndpoint is valid
+	if c.PublicEndpoint == "" {
+		return fmt.Errorf("PublicEndpoint has to be defined")
+	}
+	_, err := url.Parse(c.PublicEndpoint)
+	if err != nil {
+		return fmt.Errorf("PublicEndpoint should be a valid URL")
+	}
+
 	// Check if HTTP configuration is valid
-	err := c.Http.Validate()
+	err = c.Http.Validate()
 	if err != nil {
 		return err
 	}
@@ -146,21 +150,6 @@ func (c *Config) Validate() error {
 		if err != nil {
 			return err
 		}
-		if cat.Auth != nil {
-			// Validate ticket obtainer config
-			err = cat.Auth.Validate()
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if c.Auth.Enabled {
-		// Validate ticket validator config
-		err = c.Auth.Validate()
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -182,9 +171,8 @@ func (c *Config) FindResource(resourceId string) (*Resource, bool) {
 // Catalog config
 //
 type Catalog struct {
-	Discover bool           `json:"discover"`
-	Endpoint string         `json:"endpoint"`
-	Auth     *obtainer.Conf `json:"auth"`
+	Discover bool   `json:"discover"`
+	Endpoint string `json:"endpoint"`
 }
 
 func (c *Catalog) Validate() error {
@@ -306,7 +294,6 @@ type SupportedProtocol struct {
 	Type         ProtocolType
 	Methods      []string
 	ContentTypes []string `json:"content-types"`
-	Topics       []string
 }
 
 //

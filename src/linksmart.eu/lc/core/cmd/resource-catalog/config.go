@@ -4,16 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"strings"
 
-	"linksmart.eu/auth/obtainer"
-	"linksmart.eu/auth/validator"
 	utils "linksmart.eu/lc/core/catalog"
 )
 
 type Config struct {
 	Description    string           `json:"description"`
-	PublicAddr     string           `json:"publicAddr"`
+	PublicEndpoint string           `json:"publicEndpoint"`
 	BindAddr       string           `json:"bindAddr"`
 	BindPort       int              `json:"bindPort"`
 	DnssdEnabled   bool             `json:"dnssdEnabled"`
@@ -21,15 +20,12 @@ type Config struct {
 	ApiLocation    string           `json:"apiLocation"`
 	Storage        StorageConfig    `json:"storage"`
 	ServiceCatalog []ServiceCatalog `json:"serviceCatalog"`
-	// Auth config
-	Auth validator.Conf `json:"auth"`
 }
 
 type ServiceCatalog struct {
 	Discover bool
 	Endpoint string
 	Ttl      int
-	Auth     *obtainer.Conf `json:"auth"`
 }
 
 type StorageConfig struct {
@@ -42,8 +38,12 @@ var supportedBackends = map[string]bool{
 
 func (c *Config) Validate() error {
 	var err error
-	if c.BindAddr == "" && c.BindPort == 0 {
-		err = fmt.Errorf("Empty host or port")
+	if c.BindAddr == "" || c.BindPort == 0 || c.PublicEndpoint == "" {
+		err = fmt.Errorf("BindAddr, BindPort, and PublicEndpoint have to be defined")
+	}
+	_, err = url.Parse(c.PublicEndpoint)
+	if err != nil {
+		err = fmt.Errorf("PublicEndpoint should be a valid URL")
 	}
 	if !supportedBackends[c.Storage.Type] {
 		err = fmt.Errorf("Unsupported storage backend")
@@ -67,23 +67,7 @@ func (c *Config) Validate() error {
 		if cat.Ttl <= 0 {
 			err = fmt.Errorf("All ServiceCatalog entries must have TTL >= 0")
 		}
-		if cat.Auth != nil {
-			// Validate ticket obtainer config
-			err = cat.Auth.Validate()
-			if err != nil {
-				return err
-			}
-		}
 	}
-
-	if c.Auth.Enabled {
-		// Validate ticket validator config
-		err = c.Auth.Validate()
-		if err != nil {
-			return err
-		}
-	}
-
 	return err
 }
 

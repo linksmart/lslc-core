@@ -17,7 +17,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"github.com/oleksandr/bonjour"
-	"linksmart.eu/auth/cas/validator"
 	utils "linksmart.eu/lc/core/catalog"
 	catalog "linksmart.eu/lc/core/catalog/service"
 )
@@ -129,16 +128,6 @@ func setupRouter(config *Config) (*mux.Router, error) {
 	commonHandlers := alice.New(
 		context.ClearHandler,
 	)
-
-	// Append auth handler if enabled
-	if config.Auth.Enabled {
-		v, err := validator.New(config.Auth)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
-		commonHandlers = commonHandlers.Append(v.Handler)
-	}
 
 	// Configure routers
 	r := mux.NewRouter().StrictSlash(true)

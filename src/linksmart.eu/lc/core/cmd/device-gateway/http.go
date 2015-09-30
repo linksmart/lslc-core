@@ -6,14 +6,12 @@ import (
 	"io/ioutil"
 	"mime"
 	"net/http"
-	"os"
 	"path/filepath"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
-	"linksmart.eu/auth/cas/validator"
 	catalog "linksmart.eu/lc/core/catalog/resource"
 )
 
@@ -40,16 +38,6 @@ func newRESTfulAPI(conf *Config, dataCh chan<- DataRequest) *RESTfulAPI {
 	commonHandlers := alice.New(
 		context.ClearHandler,
 	)
-
-	// Append auth handler if enabled
-	if conf.Auth.Enabled {
-		v, err := validator.New(conf.Auth)
-		if err != nil {
-			logger.Println(err.Error())
-			os.Exit(1)
-		}
-		commonHandlers = commonHandlers.Append(v.Handler)
-	}
 
 	api := &RESTfulAPI{
 		config:         conf,

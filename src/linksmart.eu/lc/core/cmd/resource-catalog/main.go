@@ -17,9 +17,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"github.com/oleksandr/bonjour"
-	"linksmart.eu/auth/cas/obtainer"
-	"linksmart.eu/auth/cas/validator"
-	auth "linksmart.eu/auth/obtainer"
 	utils "linksmart.eu/lc/core/catalog"
 	catalog "linksmart.eu/lc/core/catalog/resource"
 	sc "linksmart.eu/lc/core/catalog/service"
@@ -73,16 +70,7 @@ func main() {
 			// Set TTL
 			service.Ttl = cat.Ttl
 			sigCh := make(chan bool)
-			if cat.Auth == nil {
-				go sc.RegisterServiceWithKeepalive(cat.Endpoint, cat.Discover, *service, sigCh, &wg, nil)
-			} else {
-				// Setup auth client with a CAS obtainer
-				go sc.RegisterServiceWithKeepalive(cat.Endpoint, cat.Discover, *service, sigCh, &wg,
-					auth.NewClient(
-						obtainer.New(cat.Auth.ServerAddr),
-						cat.Auth.Username, cat.Auth.Password, cat.Auth.ServiceID),
-				)
-			}
+			go sc.RegisterServiceWithKeepalive(cat.Endpoint, cat.Discover, *service, sigCh, &wg)
 			regChannels = append(regChannels, sigCh)
 			wg.Add(1)
 		}
@@ -165,16 +153,6 @@ func setupRouter(config *Config) (*mux.Router, error) {
 	commonHandlers := alice.New(
 		context.ClearHandler,
 	)
-
-	// Append auth handler if enabled
-	if config.Auth.Enabled {
-		v, err := validator.New(config.Auth)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
-		commonHandlers = commonHandlers.Append(v.Handler)
-	}
 
 	// Configure routers
 	r := mux.NewRouter().StrictSlash(true)

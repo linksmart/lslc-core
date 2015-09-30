@@ -13,14 +13,11 @@ import (
 	"linksmart.eu/lc/core/catalog/service"
 )
 
-// resourceToTopic map will store the resource to mqtt-topic mapping
-// specified in the device configuration file
 type MQTTPublisher struct {
 	config   *MqttProtocol
 	clientId string
 	client   *MQTT.MqttClient
 	dataCh   chan AgentResponse
-	resourceToTopic *map[string]string
 }
 
 func newMQTTPublisher(conf *Config) *MQTTPublisher {
@@ -31,33 +28,24 @@ func newMQTTPublisher(conf *Config) *MQTTPublisher {
 	}
 
 	requiresMqtt := false
-	mapResourcesToTopic := make(map[string]string)
 	for _, d := range conf.Devices {
-		logger.Println("parsing device: ",d.Name)
 		for _, r := range d.Resources {
-			logger.Println("parsing resource: ",r.Name)
 			for _, p := range r.Protocols {
 				if p.Type == ProtocolTypeMQTT {
 					requiresMqtt = true
-					if len(p.Type)>0 {
-						for _, t := range p.Topics {
-							mapResourcesToTopic[d.ResourceId(r.Name)] = t	
-							logger.Println("Resource >",r.Name,"< mapped to MQTT-topic : ",mapResourcesToTopic[d.ResourceId(r.Name)])
-						}
-					}
-					//break
+					break
 				}
-//				if requiresMqtt {
-//					break
-//				}
+				if requiresMqtt {
+					break
+				}
 			}
-//			if requiresMqtt {
-//				break
-//			}
+			if requiresMqtt {
+				break
+			}
 		}
-//		if requiresMqtt {
-//			break
-//		}
+		if requiresMqtt {
+			break
+		}
 	}
 
 	if !requiresMqtt {
@@ -69,7 +57,6 @@ func newMQTTPublisher(conf *Config) *MQTTPublisher {
 		config:   &config,
 		clientId: fmt.Sprintf("%v-%v", conf.Id, time.Now().Unix()),
 		dataCh:   make(chan AgentResponse),
-		resourceToTopic: &mapResourcesToTopic,
 	}
 
 	return publisher
@@ -108,16 +95,7 @@ func (p *MQTTPublisher) start() {
 			logger.Println("MQTTPublisher.start() data ERROR from agent manager:", string(resp.Payload))
 			continue
 		}
-	
-		topicMap := *p.resourceToTopic
-		topic := topicMap[resp.ResourceId]
-		if topic == ""{
-			topic = fmt.Sprintf("%s/%s", prefix, resp.ResourceId)
-		 	logger.Println("publishing topic: ",topic)				
-		}else{
-			logger.Println("publishing user defined topic: ",topic)
-		}
-		
+		topic := fmt.Sprintf("%s/%s", prefix, resp.ResourceId)
 		p.client.Publish(MQTT.QoS(qos), topic, resp.Payload)
 		// We dont' wait for confirmation from broker (avoid blocking here!)
 		//<-r
@@ -131,7 +109,7 @@ func (p *MQTTPublisher) discoverBrokerEndpoint() error {
 		return err
 	}
 
-	rcc := service.NewRemoteCatalogClient(endpoint, nil)
+	rcc := service.NewRemoteCatalogClient(endpoint)
 	res, _, err := rcc.FindServices("meta.serviceType", "equals", DNSSDServiceTypeMQTT, 1, 50)
 	if err != nil {
 		return err
