@@ -34,10 +34,10 @@ func main() {
 	agentManager := newAgentManager(config)
 
 	// Configure MQTT publishing if required
-	mqttPublisher := newMQTTPublisher(config)
-	if mqttPublisher != nil {
-		agentManager.setPublishingChannel(mqttPublisher.dataInbox())
-		go mqttPublisher.start()
+	mqttConnector := newMQTTConnector(config)
+	if mqttConnector != nil {
+		agentManager.setPublishingChannel(mqttConnector.dataInbox())
+		go mqttConnector.start()
 	}
 
 	// Start agents
@@ -94,8 +94,8 @@ func main() {
 
 	// Shutdown all
 	agentManager.stop()
-	if mqttPublisher != nil {
-		mqttPublisher.stop()
+	if mqttConnector != nil {
+		mqttConnector.stop()
 	}
 
 	// Unregister in the remote catalog(s)

@@ -294,6 +294,8 @@ type SupportedProtocol struct {
 	Type         ProtocolType
 	Methods      []string
 	ContentTypes []string `json:"content-types"`
+	PubTopic     string   `json:"pub_topic"`
+	SubTopic     string   `json:"sub_topic"`
 }
 
 //
