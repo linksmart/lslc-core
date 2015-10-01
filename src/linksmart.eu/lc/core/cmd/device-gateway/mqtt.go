@@ -17,7 +17,7 @@ import (
 type MQTTConnector struct {
 	config    *MqttProtocol
 	clientID  string
-	client    *MQTT.MqttClient
+	client    *MQTT.Client
 	pubCh     chan AgentResponse
 	subCh     chan DataRequest
 	pubTopics map[string]string
@@ -106,7 +106,7 @@ func (c *MQTTConnector) start() {
 			continue
 		}
 		topic := c.pubTopics[resp.ResourceId]
-		c.client.Publish(MQTT.QoS(qos), topic, resp.Payload)
+		c.client.Publish(topic, byte(qos), false, resp.Payload)
 		// We dont' wait for confirmation from broker (avoid blocking here!)
 		//<-r
 		logger.Println("MQTTConnector.start() published to", topic)
@@ -168,11 +168,12 @@ func (c *MQTTConnector) connect(backOff int) {
 		if c.client.IsConnected() {
 			break
 		}
-		_, err := c.client.Start()
-		if err == nil {
+		token := c.client.Connect()
+		token.Wait()
+		if token.Error() == nil {
 			break
 		}
-		logger.Printf("MQTTConnector.connect() failed to connect: %v\n", err.Error())
+		logger.Printf("MQTTConnector.connect() failed to connect: %v\n", token.Error().Error())
 		if backOff == 0 {
 			backOff = 10
 		} else if backOff <= 600 {
@@ -184,7 +185,7 @@ func (c *MQTTConnector) connect(backOff int) {
 	return
 }
 
-func (c *MQTTConnector) onConnectionLost(client *MQTT.MqttClient, reason error) {
+func (c *MQTTConnector) onConnectionLost(client *MQTT.Client, reason error) {
 	logger.Println("MQTTPulbisher.onConnectionLost() lost connection to the broker: ", reason.Error())
 
 	// Initialize a new client and reconnect
@@ -195,9 +196,10 @@ func (c *MQTTConnector) onConnectionLost(client *MQTT.MqttClient, reason error) 
 func (c *MQTTConnector) configureMqttConnection() {
 	connOpts := MQTT.NewClientOptions().
 		AddBroker(c.config.URL).
-		SetClientId(c.clientID).
+		SetClientID(c.clientID).
 		SetCleanSession(true).
-		SetOnConnectionLost(c.onConnectionLost)
+		SetConnectionLostHandler(c.onConnectionLost).
+		SetAutoReconnect(false) // we take care of re-connect ourselves
 
 	// Username/password authentication
 	if c.config.Username != "" && c.config.Password != "" {
@@ -232,7 +234,7 @@ func (c *MQTTConnector) configureMqttConnection() {
 			}
 		}
 
-		connOpts.SetTlsConfig(tlsConfig)
+		connOpts.SetTLSConfig(tlsConfig)
 	}
 
 	c.client = MQTT.NewClient(connOpts)

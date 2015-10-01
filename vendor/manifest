@@ -2,6 +2,12 @@
 	"version": 0,
 	"dependencies": [
 		{
+			"importpath": "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
+			"repository": "https://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
+			"revision": "546c47a6d0e9492e77f6f37473d59c36a708e08b",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/codegangsta/negroni",
 			"repository": "https://github.com/codegangsta/negroni",
 			"revision": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b",
@@ -76,12 +82,6 @@
 			"revision": "66f0418ca41253f8d1a024eb9754e9441a8e79b9",
 			"branch": "master",
 			"path": "/websocket"
-		},
-		{
-			"importpath": "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
-			"repository": "https://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
-			"revision": "0d6c6e73b249ca8d48fde878b4d1cfbb4cd45a5e",
-			"branch": "HEAD"
 		}
 	]
 }
