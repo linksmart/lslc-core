@@ -34,7 +34,7 @@ func main() {
 	agentManager := newAgentManager(config)
 
 	// Configure MQTT publishing if required
-	mqttConnector := newMQTTConnector(config)
+	mqttConnector := newMQTTConnector(config, agentManager.DataRequestInbox())
 	if mqttConnector != nil {
 		agentManager.setPublishingChannel(mqttConnector.dataInbox())
 		go mqttConnector.start()
