@@ -1,0 +1,96 @@
+{
+  "name": "Flex4GridDevice",
+  "description": "Flex4Grid smart plug simulator",
+  "meta": {"any":"key", "kind":"dummy"},
+  "ttl": 30,
+  "resources": [
+    {
+      "type": "Resource",
+      "name": "Payload_A",
+      "meta": {},
+      "agent": {
+        "type": "service",
+        "dir": null,
+        "exec": "python agent-examples/flex4grid/payload_A.py"
+      },
+      "representation": {
+        "text/plain": {
+          "type": "string"
+        }
+      },
+      "protocols": [
+        {
+          "type": "MQTT",
+          "methods": [
+            "PUB"
+          ],
+          "content-types": [
+            "text/plain"
+          ],
+          "topics": [
+	    "/households/House_001/consumption"	
+	  ]
+        }
+      ]
+    },
+	{
+      "type": "Resource",
+      "name": "Payload_B",
+      "meta": {},
+      "agent": {
+        "type": "service",
+        "dir": null,
+        "exec": "python agent-examples/flex4grid/payload_B.py"
+      },
+      "representation": {
+        "text/plain": {
+          "type": "string"
+        }
+      },
+      "protocols": [
+        {
+          "type": "MQTT",
+          "methods": [
+            "PUB"
+          ],
+          "content-types": [
+            "text/plain"
+          ],
+          "topics": [
+            "/households/House_001/devices/device_001/profile"
+          ]
+        }
+      ]
+    },
+     {
+      "type": "Resource",
+      "name": "Payload_C",
+      "meta": {},
+      "agent": {
+        "type": "service",
+        "dir": null,
+        "exec": "agent-examples/flex4grid/payload_C.sh"
+      },
+      "representation": {
+        "text/plain": {
+          "type": "string"
+        }
+      },
+      "protocols": [
+        {
+          "type": "MQTT",
+          "methods": [
+            "PUB"
+          ],
+          "content-types": [
+            "text/plain"
+          ],
+          "topics": [
+            "/households/House_001/devices/device_001/error"
+          ]
+        }
+      ]
+    } 
+
+  ]
+}

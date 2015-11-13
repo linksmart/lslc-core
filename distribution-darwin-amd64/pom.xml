@@ -1,0 +1,47 @@
+<project>
+<modelVersion>4.0.0</modelVersion>
+
+<parent>
+    <groupId>eu.linksmart.lc.distribution</groupId>
+    <artifactId>eu.linksmart.lc.flex4grid</artifactId>
+    <version>0.2.0-SNAPSHOT</version>
+</parent>
+
+
+<groupId>eu.linksmart.lc.distribution</groupId>
+<artifactId>darwin-amd64.flex4grid.deployable</artifactId>
+<version>0.2.0-SNAPSHOT</version>
+<build>
+	<extensions>
+	</extensions>
+	<plugins>
+		<plugin>
+			<groupId>org.codehaus.mojo</groupId>
+			<artifactId>build-helper-maven-plugin</artifactId>
+			<version>1.9.1</version>
+			<configuration>
+			<artifacts>
+				<artifact>
+					<file>../target/lslc-${parent.version}_darwin_amd64.zip</file>
+					<type>zip</type>
+					<classifier>distribution</classifier>
+				</artifact>
+				<artifact>
+					<file>../target/lslc-${parent.version}_darwin_amd64.tar.gz</file>
+					<type>tar.gz</type>
+					<classifier>distribution</classifier>
+				</artifact>
+			</artifacts>
+			</configuration>
+			<executions>
+				<execution>
+					<phase>package</phase>
+					<goals>
+						<goal>attach-artifact</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+	</plugins>
+</build>
+</project> 
