@@ -116,7 +116,8 @@ func (self *Resource) unLdify(apiLocation string) Resource {
 
 func (self ReadableCatalogAPI) collectionFromDevices(devices []Device, page, perPage, total int) *Collection {
 	respDevices := make(map[string]EmptyDevice)
-	respResources := make([]Resource, 0, self.catalogStorage.getResourcesCount())
+	//respResources := make([]Resource, 0, self.catalogStorage.getResourcesCount())
+	var respResources []Resource
 
 	for _, d := range devices {
 		dld := d.ldify(self.apiLocation)

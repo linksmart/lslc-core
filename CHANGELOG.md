@@ -12,7 +12,17 @@
       + Allows to use custom <protocol>://<addr>:<port> for local endpoints when publishing to catalogs etc. E.g., can be used together with reverse proxy.
     - Added (optional) authentication and authorization support for HTTP APIs
       + optional AUTH struct in config files of services and clients
-      + Serer side (service/resource catalogs, device-gateway)
+      + Server side (service/resource catalogs, device-gateway)
           * (optional) AUTH struct in config files for server configuration
       + Client side (service/resource catalogs clients, device-gateway)
           * remote catalogs clients: all HTTP requests through a custom HTTP client with AUTH support
+      + Support for multiple AUTH providers (drivers)
+    - Added LevelDB storage backend for service/resource catalogs
+      + Configurable backend for service/resource catalogs clients, device-gateway
+    - Added Proxy-based storage implementation to resource catalog
+      + Implementation in resource/proxystorage.go
+      + Added/Modified methods in resource/remoteclient.go
+          * Added GetResource
+          * GetDevices->GetMany, fixed a bug in devicesFromResponse func
+          * Updated corresponding interfaces in resource/client.go
+      + Added rc-proxy (resource-catalog proxy), a client for Proxy-based resource catalog

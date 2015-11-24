@@ -23,8 +23,13 @@ func (self *LocalCatalogClient) Get(id string) (*Device, error) {
 	return &d, err
 }
 
-func (self *LocalCatalogClient) GetDevices(page int, perPage int) ([]Device, int, error) {
+func (self *LocalCatalogClient) GetMany(page int, perPage int) ([]Device, int, error) {
 	return self.localStorage.getMany(page, perPage)
+}
+
+func (self *LocalCatalogClient) GetResource(id string) (*Resource, error) {
+	r, err := self.localStorage.getResourceById(id)
+	return &r, err
 }
 
 func (self *LocalCatalogClient) FindDevice(path, op, value string) (*Device, error) {
