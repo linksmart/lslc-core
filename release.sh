@@ -25,6 +25,28 @@ PROJECT_DIR="${DIR}"
 echo "PROJECT DIR: $PROJECT_DIR"
 cd "${PROJECT_DIR}"
 
+# grab newest flex4grid configuration artifact
+MAVEN_METADATA=maven-metadata.xml
+ARTIFACT_NAME="LSLC-Configuration"
+REPO_URL="https://linksmart.eu/repo/content/repositories/public/eu/linksmart/lc/flex4grid/LSLC-Configuration/0.2.0-SNAPSHOT/"
+echo "maven metadata file : $MAVEN_METADATA"
+echo "repo url : $REPO_URL"
+# retrieve maven metadata to get latest distribution artifact
+wget $REPO_URL$MAVEN_METADATA
+# extract latest version over xpath
+export LSGC_BUILD=$(xmllint --xpath "string(//metadata/versioning/snapshotVersions/snapshotVersion[2]/value)" $MAVEN_METADATA)
+echo "current flex4grid configuration artifact: $LSGC_BUILD"
+# grab latest binary distribution from artifact server
+wget $REPO_URL$ARTIFACT_NAME-$LSGC_BUILD-bin.tar.gz
+export LSGC_CONFIG_FILE=$ARTIFACT_NAME-$LSGC_BUILD-bin.tar.gz
+tar xvfz $LSGC_CONFIG_FILE
+chmod -R a+w templates/
+chmod -R a+w conf/
+chmod -R a+w agents/
+# remove downloaded configuration artifact
+rm maven-metadata.xml
+rm $LSGC_CONFIG_FILE
+
 for os in "${GOOS[@]}"
 do
     for arch in "${GOARCH[@]}"
@@ -79,18 +101,26 @@ do
             fi
         fi
         popd
-
+	echo "creating directiories..."
         # Copy configuration
         mkdir -p "$d/conf/devices"
-        mkdir -p "$d/conf/services"
-
-        cp -Rv "$DIR"/conf/*.json "$d/conf/"
+        mkdir -p "$d/agents"
+	mkdir -p "$d/templates"
+#        mkdir -p "$d/conf/services"
+	echo "copying files..."
+        cp -Rvp "$DIR"/conf/*.* "$d/conf/"
         cp -Rv "$DIR"/conf/devices/*.json "$d/conf/devices/"
-        cp -Rv "$DIR"/conf/services/*.json "$d/conf/services/"
+        #cp -Rv "$DIR"/conf/services/*.json "$d/conf/services/"
+	echo "[OK] configuration copied."
 
         # Copy examples of agents
-        mkdir "$d/agent-examples"
-        cp -Rv "$DIR"/agent-examples/* "$d/agent-examples"
+        #mkdir "$d/agent-examples"
+        cp -Rv "$DIR"/agents/* "$d/agents"
+	echo "[OK] agents copied."
+
+        # Copy templates
+	cp -Rv "$DIR"/templates/* "$d/templates"
+	echo "[OK] templates copied."
 
         # Copy static
         mkdir -p "$d/static/"
