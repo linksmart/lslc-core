@@ -108,6 +108,8 @@ do
 	mkdir -p "$d/templates"
 #        mkdir -p "$d/conf/services"
 	echo "copying files..."
+        cp -v "$DIR"/ZwaveMultiplexer.py "$d/"
+        cp -v "$DIR"/registerHousehold.sh "$d/"
         cp -Rvp "$DIR"/conf/*.* "$d/conf/"
         cp -Rv "$DIR"/conf/devices/*.json "$d/conf/devices/"
         #cp -Rv "$DIR"/conf/services/*.json "$d/conf/services/"
