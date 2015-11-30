@@ -113,7 +113,8 @@ do
         cp -Rvp "$DIR"/conf/*.* "$d/conf/"
         cp -Rv "$DIR"/conf/devices/*.json "$d/conf/devices/"
         #cp -Rv "$DIR"/conf/services/*.json "$d/conf/services/"
-	echo "[OK] configuration copied."
+	cp -v "$DIR"/README.md "$d/"
+	echo "[OK] configuration files copied."
 
         # Copy examples of agents
         #mkdir "$d/agent-examples"
