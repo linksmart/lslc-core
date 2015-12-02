@@ -46,7 +46,7 @@ func (self *LocalCatalogClient) FindResource(path, op, value string) (*Resource,
 	return &r, err
 }
 
-func (self *LocalCatalogClient) FindResources(path, op, value string, page, perPage int) ([]Resource, int, error) {
+func (self *LocalCatalogClient) FindResources(path, op, value string, page, perPage int) ([]Device, int, error) {
 	return self.localStorage.pathFilterResources(path, op, value, page, perPage)
 }
 

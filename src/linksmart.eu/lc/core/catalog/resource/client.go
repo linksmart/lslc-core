@@ -44,5 +44,5 @@ type CatalogClient interface {
 	FindResource(path, op, value string) (*Resource, error)
 
 	// Returns a slice of Resources given: path, operation, value, page, perPage
-	FindResources(path, op, value string, page, perPage int) ([]Resource, int, error)
+	FindResources(path, op, value string, page, perPage int) ([]Device, int, error)
 }

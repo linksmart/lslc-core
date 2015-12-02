@@ -26,3 +26,14 @@
           * GetDevices->GetMany, fixed a bug in devicesFromResponse func
           * Updated corresponding interfaces in resource/client.go
       + Added rc-proxy (resource-catalog proxy), a client for Proxy-based resource catalog
+    - Minor API modifications
+      + Error handling
+          * All storage interfaces return errors (service/resource catalogs)
+          * Handling errors in catalogapi.go (service/resource catalogs)
+      + Optimized 'resources' filtering
+          * CatalogStorage.pathFilterResources returns Devices instead
+          * CatalogClient.FindResources returns Devices instead
+      + Removed devicesFromResources() from storage interface methods (resource catalog)
+      + Added Close() to storage interface (service/resource catalogs)
+      + Changed Device.Expires/Service.Expires to pointer, set to null if TTL < 0 (resource/service catalog)
+      + Path Filtering supports data types other than string (e.g. int, float, bool)

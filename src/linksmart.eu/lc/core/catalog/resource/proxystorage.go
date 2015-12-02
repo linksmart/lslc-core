@@ -124,7 +124,7 @@ TRYING:
 	return []Device{}, 0, errors.New("Some catalogs were modified while processing this request. Please try again later.")
 }
 
-func (s *ProxyStorage) getResourcesCount() int {
+func (s *ProxyStorage) getResourcesCount() (int, error) {
 	total := 0
 	for _, c := range s.catalogs {
 		_, t, err := c.Client.GetMany(1, 1)
@@ -134,7 +134,7 @@ func (s *ProxyStorage) getResourcesCount() int {
 		}
 		total += t
 	}
-	return total
+	return total, nil
 }
 
 func (s *ProxyStorage) getResourceById(id string) (Resource, error) {
@@ -148,35 +148,6 @@ func (s *ProxyStorage) getResourceById(id string) (Resource, error) {
 		}
 	}
 	return Resource{}, ErrorNotFound
-}
-
-func (s *ProxyStorage) devicesFromResources(resources []Resource) []Device {
-	devices := make([]Device, 0, len(resources))
-	deviceExists := make(map[string]bool)
-
-	for _, r := range resources {
-		d, err := s.get(r.Device)
-		if err != nil {
-			logger.Println("ProxyStorage.devicesFromResources() ERROR:", err.Error())
-			continue
-		}
-		_, exists := deviceExists[r.Device]
-		if !exists {
-			deviceExists[r.Device] = true
-
-			// only take resources that are provided as input
-			d.Resources = nil
-			for _, r2 := range resources {
-				if r2.Device == d.Id {
-					d.Resources = append(d.Resources, r2)
-				}
-			}
-
-			devices = append(devices, d)
-		}
-	}
-
-	return devices
 }
 
 // Path filtering
@@ -229,7 +200,7 @@ func (s *ProxyStorage) pathFilterResource(path, op, value string) (Resource, err
 	return Resource{}, ErrorNotFound
 }
 
-func (s *ProxyStorage) pathFilterResources(path, op, value string, page, perPage int) ([]Resource, int, error) {
+func (s *ProxyStorage) pathFilterResources(path, op, value string, page, perPage int) ([]Device, int, error) {
 	quotient := perPage / len(s.catalogs)
 	remainder := perPage - len(s.catalogs)*quotient
 	perCatalog := make([]int, len(s.catalogs))
@@ -238,18 +209,22 @@ func (s *ProxyStorage) pathFilterResources(path, op, value string, page, perPage
 	}
 	perCatalog[len(perCatalog)-1] += remainder
 
-	var resources []Resource
+	var devs []Device
 	var total int = 0
 	for i, c := range s.catalogs {
-		r, t, err := c.Client.FindResources(path, op, value, page, perCatalog[i])
+		d, t, err := c.Client.FindResources(path, op, value, page, perCatalog[i])
 		if err != nil {
 			logger.Println("ProxyStorage.pathFilterResources() ERROR:", err.Error())
 			continue
 		}
-		resources = append(resources, r...)
+		devs = append(devs, d...)
 		total += t
 	}
-	return resources, total, nil
+	return devs, total, nil
+}
+
+func (s *ProxyStorage) Close() error {
+	return nil
 }
 
 // NOT IMPLEMENTED
@@ -262,7 +237,7 @@ func (s *ProxyStorage) update(id string, d Device) error {
 func (s *ProxyStorage) delete(id string) error {
 	return errors.New("ProxyStorage: Forbidden operation.")
 }
-func (s *ProxyStorage) getDevicesCount() int {
-	return -1
+func (s *ProxyStorage) getDevicesCount() (int, error) {
+	return -1, errors.New("ProxyStorage: Operation not implemented.")
 }
 func (s *ProxyStorage) cleanExpired(timestamp time.Time) {}
