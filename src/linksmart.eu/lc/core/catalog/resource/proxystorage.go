@@ -3,6 +3,7 @@ package resource
 import (
 	"errors"
 	"math"
+	"reflect"
 	"sync"
 	"time"
 )
@@ -47,6 +48,9 @@ func (s *ProxyStorage) get(id string) (Device, error) {
 // Calculates ratio-based resource destribution per catalog
 func (s *ProxyStorage) calcRatios(perPage int) []int {
 	perCatalog := make([]int, len(s.catalogs))
+	if s.total == 0 {
+		return perCatalog
+	}
 	sum := 0
 	for i := range perCatalog {
 		perCatalog[i] = int(math.Ceil(float64(s.catalogs[i].total) * float64(perPage) / float64(s.total)))
@@ -82,20 +86,14 @@ func (s *ProxyStorage) getMany(page int, perPage int) ([]Device, int, error) {
 		}
 	}
 
-	// Number of tries to apply modifications of remote catalogs
-	NUM_OF_TRIES := len(s.catalogs)
-
-TRYING:
-	for tries := NUM_OF_TRIES; tries >= 0; tries-- {
+	getMany := func(perCatalog []int) ([]Device, bool) {
 		if s.total <= 0 {
 			logger.Println("ProxyStorage.getMany() No resources proxied. All catalogs are unreachable or empty.")
-			return []Device{}, 0, nil
+			return []Device{}, false
 		}
 
-		perCatalog := s.calcRatios(perPage)
-		logger.Println("ProxyStorage.getMany() Expected resources per catalog:", perCatalog)
-
 		var devices []Device
+		changed := false
 		for i, c := range s.catalogs {
 			d, t, err := c.Client.GetMany(page, perCatalog[i])
 			if err != nil {
@@ -107,7 +105,7 @@ TRYING:
 				logger.Println("ProxyStorage.getMany() Detected changes in catalog", c.Endpoint)
 				s.total += (t - s.catalogs[i].total)
 				s.catalogs[i].total = t
-				continue TRYING
+				changed = true
 			}
 
 			if t <= 0 {
@@ -117,11 +115,23 @@ TRYING:
 
 			devices = append(devices, d...)
 		}
+		return devices, changed
+	}
+	perCatalog := s.calcRatios(perPage)
+	devices, changed := getMany(perCatalog)
+	if !changed {
 		return devices, s.total, nil
 	}
 
-	logger.Println("ProxyStorage.getMany() Catalog(s) keep changing. Exceeded number of tries:", NUM_OF_TRIES)
-	return []Device{}, 0, errors.New("Some catalogs were modified while processing this request. Please try again later.")
+	// Catalog(s) are changed
+	perCatalogUpdt := s.calcRatios(perPage)
+	if reflect.DeepEqual(perCatalog, perCatalogUpdt) { // rations remain the same
+		return devices, s.total, nil
+	}
+
+	// Ratios are changed, query again
+	devices, _ = getMany(perCatalogUpdt)
+	return devices, s.total, nil
 }
 
 func (s *ProxyStorage) getResourcesCount() (int, error) {
