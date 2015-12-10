@@ -8,7 +8,7 @@
 
 <groupId>eu.linksmart.lc.distribution</groupId>
 <artifactId>eu.linksmart.lc.flex4grid</artifactId>
-<version>0.2.0-SNAPSHOT</version>
+<version>0.2.0</version>
 <packaging>pom</packaging>
 <name>LS LC suite - all supported architectures</name>
     <description>Triggers Maven versioning and artifact creation for all architectures</description>

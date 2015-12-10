@@ -28,7 +28,7 @@ cd "${PROJECT_DIR}"
 # grab newest flex4grid configuration artifact
 MAVEN_METADATA=maven-metadata.xml
 ARTIFACT_NAME="LSLC-Configuration"
-REPO_URL="https://linksmart.eu/repo/content/repositories/public/eu/linksmart/lc/flex4grid/LSLC-Configuration/0.2.0-SNAPSHOT/"
+REPO_URL="https://linksmart.eu/repo/content/repositories/public/eu/linksmart/lc/flex4grid/LSLC-Configuration/0.2.0/"
 echo "maven metadata file : $MAVEN_METADATA"
 echo "repo url : $REPO_URL"
 # retrieve maven metadata to get latest distribution artifact
