@@ -45,7 +45,7 @@ chmod -R a+w templates/
 chmod -R a+w conf/
 chmod -R a+w agents/
 # remove downloaded configuration artifact
-rm maven-metadata.xml
+#####rm maven-metadata.xml
 rm $LSGC_CONFIG_FILE
 
 for os in "${GOOS[@]}"
