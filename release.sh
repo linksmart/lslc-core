@@ -35,7 +35,7 @@ echo "repo url : $REPO_URL"
 #wget $REPO_URL$MAVEN_METADATA
 # extract latest version over xpath
 #export LSGC_BUILD=$(xmllint --xpath "string(//metadata/versioning/snapshotVersions/snapshotVersion[2]/value)" $MAVEN_METADATA)
-export LSGC_BUILD="https://linksmart.eu/repo/content/repositories/releases/eu/linksmart/lc/flex4grid/LSLC-Configuration/0.2.0/"
+export LSGC_BUILD="0.2.0"
 echo "current flex4grid configuration artifact: $LSGC_BUILD"
 # grab latest binary distribution from artifact server
 wget $REPO_URL$ARTIFACT_NAME-$LSGC_BUILD-bin.tar.gz
