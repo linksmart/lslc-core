@@ -4,7 +4,7 @@
 <parent>
 	<groupId>eu.linksmart.lc.distribution</groupId>
 	<artifactId>eu.linksmart.lc.flex4grid</artifactId>
-	<version>0.2.0</version>
+	<version>0.2.1-SNAPSHOT</version>
 </parent>
 
 
