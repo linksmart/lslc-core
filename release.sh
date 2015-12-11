@@ -113,7 +113,7 @@ do
         cp -v "$DIR"/ZwaveMultiplexer.py "$d/"
         cp -v "$DIR"/registerHousehold.sh "$d/"
         cp -Rvp "$DIR"/conf/*.* "$d/conf/"
-        cp -Rv "$DIR"/conf/devices/*.json "$d/conf/devices/"
+        #cp -Rv "$DIR"/conf/devices/*.json "$d/conf/devices/"
         #cp -Rv "$DIR"/conf/services/*.json "$d/conf/services/"
 	cp -v "$DIR"/README.md "$d/"
 	echo "[OK] configuration files copied."
