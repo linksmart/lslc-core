@@ -7,6 +7,8 @@ MGOOS=`go env GOOS`
 MGORCH=`go env GOARCH`
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
+echo "--------"
+ls -la conf/devices
 
 if [ "$VERSION" = "" ]; then
     VERSION="DEV"
@@ -38,11 +40,15 @@ wget $REPO_URL$MAVEN_METADATA
 export LSGC_BUILD=$(xmllint --xpath "string(//metadata/versioning/snapshotVersions/snapshotVersion[2]/value)" $MAVEN_METADATA)
 #export LSGC_BUILD="0.2.0"
 echo "current flex4grid configuration artifact: $LSGC_BUILD"
+echo "----------"
+ls -la conf/devices
 # grab latest binary distribution from artifact server
 wget $REPO_URL$ARTIFACT_NAME-$LSGC_BUILD-bin.tar.gz
 export LSGC_CONFIG_FILE=$ARTIFACT_NAME-$LSGC_BUILD-bin.tar.gz
+echo "-------"
 ls -la conf/devices
 tar xvfz $LSGC_CONFIG_FILE
+echo "-------"
 ls -la conf/devices
 chmod -R a+w templates/
 chmod -R a+w conf/
