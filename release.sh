@@ -41,9 +41,9 @@ echo "current flex4grid configuration artifact: $LSGC_BUILD"
 # grab latest binary distribution from artifact server
 wget $REPO_URL$ARTIFACT_NAME-$LSGC_BUILD-bin.tar.gz
 export LSGC_CONFIG_FILE=$ARTIFACT_NAME-$LSGC_BUILD-bin.tar.gz
-ls -la conf/
+ls -la conf/devices
 tar xvfz $LSGC_CONFIG_FILE
-ls -la conf/
+ls -la conf/devices
 chmod -R a+w templates/
 chmod -R a+w conf/
 chmod -R a+w agents/
