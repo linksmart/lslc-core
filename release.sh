@@ -28,19 +28,22 @@ cd "${PROJECT_DIR}"
 # grab newest flex4grid configuration artifact
 MAVEN_METADATA=maven-metadata.xml
 ARTIFACT_NAME="LSLC-Configuration"
-REPO_URL="https://linksmart.eu/repo/content/repositories/public/eu/linksmart/lc/flex4grid/LSLC-Configuration/0.2.1-SNAPSHOT/"
+ARTIFACT_VERSION="0.2.1-SNAPSHOT"
+REPO_URL="https://linksmart.eu/repo/content/repositories/public/eu/linksmart/lc/flex4grid/LSLC-Configuration/$ARTIFACT_VERSION/"
 echo "maven metadata file : $MAVEN_METADATA"
 echo "repo url : $REPO_URL"
 # retrieve maven metadata to get latest distribution artifact
 wget $REPO_URL$MAVEN_METADATA
-# extract latest version over xpath (SNAPSHOT only)
+# extract latest version over xpath (SNAPSHOT only, won't work with release)
 export LSGC_BUILD=$(xmllint --xpath "string(//metadata/versioning/snapshotVersions/snapshotVersion[2]/value)" $MAVEN_METADATA)
 #export LSGC_BUILD="0.2.0"
 echo "current flex4grid configuration artifact: $LSGC_BUILD"
 # grab latest binary distribution from artifact server
 wget $REPO_URL$ARTIFACT_NAME-$LSGC_BUILD-bin.tar.gz
 export LSGC_CONFIG_FILE=$ARTIFACT_NAME-$LSGC_BUILD-bin.tar.gz
+ls -la conf/
 tar xvfz $LSGC_CONFIG_FILE
+ls -la conf/
 chmod -R a+w templates/
 chmod -R a+w conf/
 chmod -R a+w agents/
