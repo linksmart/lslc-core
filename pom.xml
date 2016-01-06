@@ -15,8 +15,6 @@
 <modules>
 	<module>distribution-linux-amd64</module>
 	<module>distribution-linux-arm</module>
-	<module>distribution-darwin-amd64</module>
 	<module>distribution-windows-amd64</module>
-	<module>distribution-windows-386</module>
 </modules>
 </project> 

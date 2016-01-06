@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 VERSION=$1
-GOOS=("linux" "darwin" "windows")
+GOOS=("linux" "windows")
 GOARCH=("amd64" "arm")
 MGOOS=`go env GOOS`
 MGORCH=`go env GOARCH`
