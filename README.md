@@ -8,18 +8,28 @@
 INSTALLATION
 
 - download and unzip LinkSmart LocalConnect (LSLC) . You will find it here. https://linksmart.eu/repo/content/repositories/public/eu/linksmart/lc/distribution/
-Choose "flex4grid" distribution for your architecture.
-Amd64 direct link: https://linksmart.eu/repo/content/repositories/public/eu/linksmart/lc/distribution/linux-amd64.flex4grid.deployable/0.2.0-SNAPSHOT/linux-amd64.flex4grid.deployable-0.2.0-20150923.164235-3-distribution.tar.gz
+Choose a "flex4grid" distribution for your architecture.
 - overwrite the files in the LSLC distribution-folder with folder found in flex4grid/FIT/LSLC-ZWave
 - For a household id registration "jq" and "uuid" command line tools need to be installed. 
 
-CONFIGURATION
+CONFIGURATION - MQTT
 
 - configure the default (localhost) MQTT broker endpoing regardingly to your needs. You will find it in conf/device-gateway.json
+
+CONFIGURATION - Open ZWave
+
 - configure the Open ZWave environment (OZW) and the serial port used by the OZW controller. To do so edit the conf/ZWaveMultiplexer.conf
+  The configuration file looks like:
+
+  /dev/ttyACM0
+  /home/user/python-openzwave/openzwave/config
+  True
+  10000
+
   The first line specifies the serial port of the OZW controller.  The second line points to your OZW environment directory
-- The 3rd  line inside ZWaveMultiplexer.conf enables polling. By default polling is enabled. No changes are needed here.
-- The 4th line of the ZWaveMultiplexer.conf specifies the interval between polls. The default value is 10000 ms. 
+  The 3rd  line inside ZWaveMultiplexer.conf enables polling. By default polling is enabled. No changes are needed here.
+  The 4th line of the ZWaveMultiplexer.conf specifies the interval between polls. The default value is 10000 (ms). 
+
 
 CLOUD REGISTRATION
 
