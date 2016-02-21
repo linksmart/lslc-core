@@ -2,6 +2,7 @@ package resource
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"reflect"
 	"sync"
@@ -72,6 +73,10 @@ func (s *ProxyStorage) calcRatios(perPage int) []int {
 func (s *ProxyStorage) getMany(page int, perPage int) ([]Device, int, error) {
 	s.Lock()
 	defer s.Unlock()
+
+	if perPage < len(s.catalogs) {
+		return []Device{}, 0, fmt.Errorf("per_page must be greater than or equal to %d", len(s.catalogs))
+	}
 
 	// init
 	if s.total == 0 {
