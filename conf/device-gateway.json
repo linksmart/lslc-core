@@ -1,14 +1,8 @@
 {
   "id": "demo-dgw",
-  "description": "Example Gateway",
-  "publicEndpoint": "http://fqdn-of-the-host:8080",
+  "description": "Flex4grid device gateway - prepilot",
+  "publicEndpoint": "http://localhost:8080",
   "staticDir": "./static",
-  "catalog": [
-    {
-      "discover": true,
-      "endpoint": "http://localhost:8080/rc"
-    }
-  ],
   "http": {
     "bindAddr": "0.0.0.0",
     "bindPort": 8080
@@ -18,8 +12,13 @@
       "location": "/rest"
     },
     "MQTT": {
-      "url": "tcp://127.0.0.1:1883",
-      "prefix": "/demo-dgw"
+      "url": "tcp://si.broker.flex4grid.eu:1883",
+      "prefix": "/demo-dgw",
+      "DisconnectTopic": "DisconnectTopic",
+      "DisconnectMessage": "DisconnectMessage",
+      "DisconnectedRetained": true,
+      "QoS": 0
     }
   }
 }
+

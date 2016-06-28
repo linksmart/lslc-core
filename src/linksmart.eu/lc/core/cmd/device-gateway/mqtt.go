@@ -245,6 +245,7 @@ func (c *MQTTConnector) configureMqttConnection() {
 		SetCleanSession(true).
 		SetConnectionLostHandler(c.onConnectionLost).
 		SetOnConnectHandler(c.onConnected).
+		SetWill(c.config.DisconnectTopic,c.config.DisconnectMessage,c.config.QoS,c.config.DisconnectRetained).
 		SetAutoReconnect(false) // we take care of re-connect ourselves
 
 	// Username/password authentication
