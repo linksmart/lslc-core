@@ -228,6 +228,8 @@ func (c *MQTTConnector) onConnected(client *MQTT.Client) {
 	} else {
 		logger.Println("MQTTPulbisher.onConnected() no resources with SUB configured")
 	}
+	c.client.Publish(c.config.ConnectTopic, c.config.ConnectQoS, c.config.ConnectRetained,c.config.ConnectMessage)
+	logger.Println("MQTTPulbisher.onConnected() notified monitoring subscribers of topic: %s",c.config.ConnectTopic)
 }
 
 func (c *MQTTConnector) onConnectionLost(client *MQTT.Client, reason error) {
@@ -245,7 +247,8 @@ func (c *MQTTConnector) configureMqttConnection() {
 		SetCleanSession(true).
 		SetConnectionLostHandler(c.onConnectionLost).
 		SetOnConnectHandler(c.onConnected).
-		SetWill(c.config.DisconnectTopic,c.config.DisconnectMessage,c.config.QoS,c.config.DisconnectRetained).
+		SetKeepAlive(time.Duration(c.config.KeepAlive)).
+		SetWill(c.config.WillTopic,c.config.WillMessage,c.config.WillQoS,c.config.WillRetained).
 		SetAutoReconnect(false) // we take care of re-connect ourselves
 
 	// Username/password authentication

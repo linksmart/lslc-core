@@ -220,10 +220,15 @@ type MqttProtocol struct {
 	CaFile   string `json:"caFile"`
 	CertFile string `json:"certFile"`
 	KeyFile  string `json:"keyFile"`
-	DisconnectTopic string `json:"DisconnectTopic"`
-	DisconnectMessage string `json:"DisconnectMessage"`
-	DisconnectRetained bool `json:"DisconnectRetained"`
-	QoS byte `json:"QoS"`
+	WillTopic string `json:"WillTopic"`
+	WillMessage string `json:"WillMessage"`
+	WillRetained bool `json:"WillRetained"`
+	WillQoS byte `json:"WillQoS"`	
+	KeepAlive int64 `json:"KeepAlive"`	
+	ConnectTopic string `json:"ConnectTopic"`
+	ConnectMessage string `json:"ConnectMessage"`
+	ConnectRetained bool `json:"ConnectRetained"`
+	ConnectQoS byte `json:"ConnectQoS"`
 }
 
 func (p *MqttProtocol) Validate() error {
