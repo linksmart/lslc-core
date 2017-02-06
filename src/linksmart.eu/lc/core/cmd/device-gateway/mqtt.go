@@ -3,8 +3,10 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/rand"
 	"fmt"
 	"io/ioutil"
+	"io"
 	"strings"
 	"time"
 
@@ -243,7 +245,7 @@ func (c *MQTTConnector) onConnectionLost(client *MQTT.Client, reason error) {
 func (c *MQTTConnector) configureMqttConnection() {
 	connOpts := MQTT.NewClientOptions().
 		AddBroker(c.config.URL).
-		SetClientID(c.clientID).
+		SetClientID(fmt.Sprintf("%s-%s",c.clientID,getUUID())).
 		SetCleanSession(true).
 		SetConnectionLostHandler(c.onConnectionLost).
 		SetOnConnectHandler(c.onConnected).
@@ -288,4 +290,14 @@ func (c *MQTTConnector) configureMqttConnection() {
 	}
 
 	c.client = MQTT.NewClient(connOpts)
+}
+func getUUID() (string){
+	uuid := make([]byte, 16)
+	n, _ := io.ReadFull(rand.Reader, uuid)
+	if n != len(uuid) {
+		return ""
+	}
+	uuid[8] = uuid[8]&^0xc0 | 0x80
+	uuid[6] = uuid[6]&^0xf0 | 0x40
+	return fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:])
 }
