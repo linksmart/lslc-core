@@ -7,8 +7,13 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"net"
+	"os/exec"
 	"strings"
 	"time"
+
+	"net/url"
 
 	MQTT "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
 	"linksmart.eu/lc/core/catalog"
@@ -96,8 +101,8 @@ func (c *MQTTConnector) start() {
 	c.configureMqttConnection()
 
 	// start the connection routine
-	logger.Printf("MQTTConnector.start() Will connect to the broker %v\n", c.config.URL)
-	go c.connect(0)
+	// logger.Printf("MQTTConnector.start() Will connect to the broker %v\n", c.config.URL)
+	// go c.connect(0)
 
 	// start the publisher routine
 	go c.publisher()
@@ -106,16 +111,43 @@ func (c *MQTTConnector) start() {
 // reads outgoing messages from the pubCh und publishes them to the broker
 func (c *MQTTConnector) publisher() {
 	for resp := range c.pubCh {
-		if !c.client.IsConnected() {
-			logger.Println("MQTTConnector.publisher() got data while not connected to the broker. **discarded**")
-			continue
-		}
+		// if !c.client.IsConnected() {
+		// 	logger.Println("MQTTConnector.publisher() got data while not connected to the broker. **discarded**")
+		// 	continue
+		// }
 		if resp.IsError {
 			logger.Println("MQTTConnector.publisher() data ERROR from agent manager:", string(resp.Payload))
 			continue
 		}
 		topic := c.pubTopics[resp.ResourceId]
-		c.client.Publish(topic, byte(defaultQoS), false, resp.Payload)
+		// c.client.Publish(topic, byte(defaultQoS), false, resp.Payload)
+
+		// use mosquitto instead
+		go func() {
+			log.Printf("MQTTConnector.publisher() Publishing message: %v", string(resp.Payload))
+			URL, err := url.Parse(c.config.URL)
+			if err != nil {
+				log.Printf("Invalid broker url: %v", err)
+			}
+			host, port, _ := net.SplitHostPort(URL.Host)
+			cmd := exec.Command("/usr/bin/mosquitto_pub",
+				"-m", string(resp.Payload),
+				"-t", fmt.Sprintf("%q", topic),
+				"-p", port,
+				"-h", host,
+				"--cafile", c.config.CaFile,
+				"--cert", c.config.CertFile,
+				"--key", c.config.KeyFile,
+			)
+			out, err := cmd.Output()
+			if err != nil {
+				log.Printf("Command error: %v", err)
+			}
+			if string(out) != "" {
+				log.Printf("stdout: %s\n", string(out))
+			}
+		}()
+
 		// We dont' wait for confirmation from broker (avoid blocking here!)
 		//<-r
 		logger.Println("MQTTConnector.publisher() published to", topic)
