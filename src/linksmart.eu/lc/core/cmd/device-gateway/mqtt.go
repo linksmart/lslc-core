@@ -132,7 +132,7 @@ func (c *MQTTConnector) publisher() {
 			host, port, _ := net.SplitHostPort(URL.Host)
 			cmd := exec.Command("/usr/bin/mosquitto_pub",
 				"-m", string(resp.Payload),
-				"-t", fmt.Sprintf("%q", topic),
+				"-t", topic,
 				"-p", port,
 				"-h", host,
 				"--cafile", c.config.CaFile,
@@ -150,7 +150,7 @@ func (c *MQTTConnector) publisher() {
 
 		// We dont' wait for confirmation from broker (avoid blocking here!)
 		//<-r
-		logger.Println("MQTTConnector.publisher() published to", topic)
+		logger.Printf("MQTTConnector.publisher() published to %s", topic)
 	}
 }
 
