@@ -116,7 +116,7 @@ func (c *MQTTConnector) publisher() {
 		}
 		topic := c.pubTopics[resp.ResourceId]
 		go func(){
-			logger.Println("MQTTConnector.publisher() fire and forgot publish routine triggered.")
+			//logger.Println("MQTTConnector.publisher() fire and forgot publish routine triggered.")
 			c.client.Publish(topic, byte(defaultQoS), false, resp.Payload)
 			logger.Println("MQTTConnector.publisher() published to", topic)
 		}()
